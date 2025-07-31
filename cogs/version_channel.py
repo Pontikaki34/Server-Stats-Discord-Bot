@@ -2,16 +2,27 @@ import discord
 from discord.ext import commands, tasks
 import aiohttp
 
-GITHUB_RELEASE_API = "https://api.github.com/repos/yourusername/yourrepo/releases/latest"
+# Replace with your repo info
+GITHUB_VERSION_FILE_URL = "https://raw.githubusercontent.com/Pontikaki34/Server-Stats-Discord-Bot/main/version.txt"
 
 class VersionChannel(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.version = "1.0.0"  # default starting version
+        self.local_version = "1.0.0"  
         self.update_version.start()
 
     def cog_unload(self):
         self.update_version.cancel()
+
+    async def fetch_github_version(self):
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.get(GITHUB_VERSION_FILE_URL) as resp:
+                    if resp.status == 200:
+                        text = await resp.text()
+                        return text.strip()
+            except Exception:
+                return None
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -20,28 +31,22 @@ class VersionChannel(commands.Cog):
 
     @tasks.loop(minutes=30)
     async def update_version(self):
-        new_version = await self.fetch_github_version()
-        if new_version and new_version != self.version:
-            self.version = new_version
+        github_version = await self.fetch_github_version()
+        if github_version:
             for guild in self.bot.guilds:
-                await self.update_channel(guild)
-
-    async def fetch_github_version(self):
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.get(GITHUB_RELEASE_API) as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
-                        return data.get("tag_name", None)
-            except Exception:
-                return None
+                await self.update_channel(guild, github_version)
 
     async def ensure_channel(self, guild: discord.Guild):
         category = discord.utils.get(guild.categories, name="Server Stats")
         if category is None:
             category = await guild.create_category("Server Stats")
 
-        channel_name = f"Version {self.version}"
+        github_version = await self.fetch_github_version()
+
+        if github_version == self.local_version:
+            channel_name = "Version Up To Date"
+        else:
+            channel_name = "Version Not Up To Date"
 
         channel = discord.utils.get(category.channels, name__startswith="Version")
         if channel is None:
@@ -52,12 +57,15 @@ class VersionChannel(commands.Cog):
         else:
             await channel.edit(name=channel_name)
 
-    async def update_channel(self, guild):
+    async def update_channel(self, guild, github_version):
         category = discord.utils.get(guild.categories, name="Server Stats")
         if category is None:
             return
 
-        channel_name = f"Version {self.version}"
+        if github_version == self.local_version:
+            channel_name = "Version Up To Date"
+        else:
+            channel_name = "Version Not Up To Date"
 
         channel = discord.utils.get(category.channels, name__startswith="Version")
         if channel:
