@@ -58,4 +58,4 @@ Each voice channel creation is handled by its own cog on startup. You can add co
 
 ## License
 
-MIT License (or your preferred license)
+MIT License
