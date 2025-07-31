@@ -15,8 +15,8 @@ Each voice channel is visible to everyone but no one can connect to them.
 1. Clone this repository:
 
     ```bash
-    git clone https://github.com/yourusername/your-repo-name.git
-    cd your-repo-name
+    git clone https://github.com/Pontikaki34/Server-Stats-Discord-Bot.git
+    cd Server-Stats-Discord-Bot
     ```
 
 2. Install dependencies:
