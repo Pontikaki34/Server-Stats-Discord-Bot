@@ -59,3 +59,7 @@ Each voice channel creation is handled by its own cog on startup. You can add co
 ## License
 
 MIT License
+
+---
+
+Made With ❤️ By Pontikaki34
